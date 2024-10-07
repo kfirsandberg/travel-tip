@@ -65,8 +65,15 @@ function getById(locId) {
 }
 
 function remove(locId) {
-    return storageService.remove(DB_KEY, locId)
+    const locName = storageService.get(DB_KEY, locId).then(loc => loc.name) 
+    return locName.then(name => {
+        const isConfirmed = confirm(`Are you sure you want to remove "${name}"?`)
+        if (!isConfirmed) return Promise.reject('User canceled the removal')
+
+        return storageService.remove(DB_KEY, locId)
+    })
 }
+
 
 function save(loc) {
     if (loc.id) {
