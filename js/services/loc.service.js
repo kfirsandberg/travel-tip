@@ -36,15 +36,15 @@ export const locService = {
 function query() {
     return storageService.query(DB_KEY)
         .then(locs => {
+            // Filter by text (matches name or address)
             if (gFilterBy.txt) {
                 const regex = new RegExp(gFilterBy.txt, 'i')
-                locs = locs.filter(loc => regex.test(loc.name))
+                locs = locs.filter(loc => regex.test(loc.name) || regex.test(loc.geo.address))
             }
             if (gFilterBy.minRate) {
                 locs = locs.filter(loc => loc.rate >= gFilterBy.minRate)
             }
 
-            // No paging (unused)
             if (gPageIdx !== undefined) {
                 const startIdx = gPageIdx * PAGE_SIZE
                 locs = locs.slice(startIdx, startIdx + PAGE_SIZE)
@@ -54,15 +54,18 @@ function query() {
                 locs.sort((p1, p2) => (p1.rate - p2.rate) * gSortBy.rate)
             } else if (gSortBy.name !== undefined) {
                 locs.sort((p1, p2) => p1.name.localeCompare(p2.name) * gSortBy.name)
-            }else if (gSortBy.creationTime !== undefined) {
+            } else if (gSortBy.creationTime !== undefined) {
                 locs.sort((p1, p2) => {
                     const date1 = p1.updatedAt.toString()
                     const date2 = p2.updatedAt.toString()
-                    return date1.localeCompare(date2) * gSortBy.creationTime;
-                })}
+                    return date1.localeCompare(date2) * gSortBy.creationTime
+                })
+            }
+
             return locs
         })
 }
+
 
 function getById(locId) {
     return storageService.get(DB_KEY, locId)
