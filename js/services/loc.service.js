@@ -20,6 +20,7 @@ const DB_KEY = 'locs'
 var gSortBy = { rate: -1 }
 var gFilterBy = { txt: '', minRate: 0 }
 var gPageIdx
+var gGroupByUpdated = 'today'
 
 _createLocs()
 
@@ -30,7 +31,9 @@ export const locService = {
     save,
     setFilterBy,
     setSortBy,
-    getLocCountByRateMap
+    getLocCountByRateMap,
+    
+   
 }
 
 function query() {
@@ -41,15 +44,29 @@ function query() {
                 const regex = new RegExp(gFilterBy.txt, 'i')
                 locs = locs.filter(loc => regex.test(loc.name) || regex.test(loc.geo.address))
             }
+
             if (gFilterBy.minRate) {
                 locs = locs.filter(loc => loc.rate >= gFilterBy.minRate)
             }
 
+            
+            if (gGroupByUpdated === 'today') {
+                const today = Date.now() - (24 * 60 * 60 * 1000);// 1 day ago
+                locs = locs.filter(loc => loc.updatedAt >= today)
+            } else if (gGroupByUpdated === 'past') {
+                const today = Date.now() - (24 * 60 * 60 * 1000) // 1 day ago
+                locs = locs.filter(loc => loc.updatedAt < today)
+            } else if (gGroupByUpdated === 'never') {
+                locs = locs.filter(loc => loc.updatedAt === loc.createdAt);
+            }
+
+            // Implement pagination
             if (gPageIdx !== undefined) {
                 const startIdx = gPageIdx * PAGE_SIZE
                 locs = locs.slice(startIdx, startIdx + PAGE_SIZE)
             }
 
+            // Sorting logic
             if (gSortBy.rate !== undefined) {
                 locs.sort((p1, p2) => (p1.rate - p2.rate) * gSortBy.rate)
             } else if (gSortBy.name !== undefined) {
@@ -166,6 +183,7 @@ function _createLoc(loc) {
     loc.createdAt = loc.updatedAt = utilService.randomPastTime()
     return loc
 }
+
 
 
 // unused functions
