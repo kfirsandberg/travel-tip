@@ -64,8 +64,23 @@
                         <div class="pie"></div>
                         <ul class="legend"></ul>
                     </div>
+                    <div class="loc-stats-updated">
+                        <h4>By Last Updated:</h4>
+                        <select class="group-by-updated" onchange="app.onGroupByUpdated()">
+                            <option value="today">Today</option>
+                            <option value="past">Past</option>
+                            <option value="never">Never</option>
+                        </select>
+                        <div class="new-pie-chart">
+                            <div class="pie"></div>
+                            <ul class="legend"></ul>
+                        </div>
+                        
+                    </div>
+                    
                 </section>
             </section>
+
         </div>
     </main>
     <pre class="debug" hidden></pre>

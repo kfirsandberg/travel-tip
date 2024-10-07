@@ -16,8 +16,12 @@ window.app = {
     onShareLoc,
     onSetSortBy,
     onSetFilterBy,
+    onGroupByUpdated,
+    renderUpdatedStatsPie
 }
 let gUserPos
+
+
 function onInit() {
     loadAndRenderLocs()
 
@@ -268,14 +272,16 @@ function renderLocStats() {
     })
 }
 
+
+
+
 function handleStats(stats, selector) {
-    // stats = { low: 37, medium: 11, high: 100, total: 148 }
-    // stats = { low: 5, medium: 5, high: 5, baba: 55, mama: 30, total: 100 }
     const labels = cleanStats(stats)
     const colors = utilService.getColors()
 
     var sumPercent = 0
     var colorsStr = `${colors[0]} ${0}%, `
+
     labels.forEach((label, idx) => {
         if (idx === labels.length - 1) return
         const count = stats[label]
@@ -288,25 +294,31 @@ function handleStats(stats, selector) {
     })
 
     colorsStr += `${colors[labels.length - 1]} ${100}%`
-    // Example:
-    // colorsStr = `purple 0%, purple 33%, blue 33%, blue 67%, red 67%, red 100%`
 
     const elPie = document.querySelector(`.${selector} .pie`)
-    const style = `background-image: conic-gradient(${colorsStr})`
-    elPie.style = style
+    const elLegend = document.querySelector(`.${selector} .legend`)
 
-    const ledendHTML = labels.map((label, idx) => {
-        return `
+    if (elPie) {
+        elPie.style.backgroundImage = `conic-gradient(${colorsStr})`
+    } else {
+        console.error(`Element with class ${selector} .pie not found`)
+    }
+
+    if (elLegend) {
+        const ledendHTML = labels.map((label, idx) => {
+            return `
                 <li>
                     <span class="pie-label" style="background-color:${colors[idx]}"></span>
                     ${label} (${stats[label]})
                 </li>
             `
-    }).join('')
-
-    const elLegend = document.querySelector(`.${selector} .legend`)
-    elLegend.innerHTML = ledendHTML
+        }).join('')
+        elLegend.innerHTML = ledendHTML
+    } else {
+        console.error(`Element with class ${selector} .legend not found`)
+    }
 }
+
 
 function cleanStats(stats) {
     const cleanedStats = Object.keys(stats).reduce((acc, label) => {
@@ -317,3 +329,46 @@ function cleanStats(stats) {
     }, [])
     return cleanedStats
 }
+
+
+
+function renderUpdatedStatsPie(selector) {
+    locService.query().then(locs => {
+        const countByUpdated = {
+            today: 0,
+            past: 0,
+            never: 0,
+            total: 0 
+        }
+
+        locs.forEach(loc => {
+            const today = Date.now() - (24 * 60 * 60 * 1000);
+            if (loc.updatedAt >= today) {
+                countByUpdated.today++
+            } else if (loc.updatedAt < today) {
+                countByUpdated.past++
+            } 
+            
+            if (loc.updatedAt === loc.createdAt) {
+                countByUpdated.never++
+            }
+            countByUpdated.total++
+        })
+
+       
+        handleStats(countByUpdated, selector)
+    })
+}
+
+
+
+let gGroupByUpdated = 'today'
+function onGroupByUpdated() {
+    gGroupByUpdated = document.querySelector('.group-by-updated').value
+    loadAndRenderLocs()
+    
+    
+    renderUpdatedStatsPie('new-pie-chart')
+}
+
+
