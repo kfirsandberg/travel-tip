@@ -17,6 +17,7 @@ window.app = {
     onSetSortBy,
     onSetFilterBy,
     onSubmitModal,
+    onGroupByUpdated,
     renderUpdatedStatsPie
 }
 let gUserPos
@@ -348,39 +349,6 @@ function renderUpdatedStatsPie(selector) {
 }
 
 
-
-
-
-
-
-
-function renderUpdatedStatsPie(selector) {
-    locService.query().then(locs => {
-        const countByUpdated = {
-            today: 0,
-            past: 0,
-            never: 0,
-            total: 0 
-        }
-
-        locs.forEach(loc => {
-            const today = Date.now() - (24 * 60 * 60 * 1000);
-            if (loc.updatedAt >= today) {
-                countByUpdated.today++
-            } else if (loc.updatedAt < today) {
-                countByUpdated.past++
-            } 
-            
-            if (loc.updatedAt === loc.createdAt) {
-                countByUpdated.never++
-            }
-            countByUpdated.total++
-        })
-
-       
-        handleStats(countByUpdated, selector)
-    })
-}
 
 
 
