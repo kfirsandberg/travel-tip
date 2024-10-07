@@ -17,6 +17,7 @@ window.app = {
     onSetSortBy,
     onSetFilterBy,
 }
+export let gUserPos
 
 function onInit() {
     loadAndRenderLocs()
@@ -33,14 +34,22 @@ function onInit() {
 }
 
 function renderLocs(locs) {
+    let distanceHtml
+ 
     const selectedLocId = getLocIdFromQueryParams()
-    // console.log('locs:', locs)
     var strHTML = locs.map(loc => {
+        let locDistance =''
+        if (gUserPos) {
+            const locLatLan = {lat:loc.geo.lat,lng :loc.geo.lng}
+            locDistance = (`Distance: ${utilService.getDistance(locLatLan,gUserPos)} KLM`)
+        }
         const className = (loc.id === selectedLocId) ? 'active' : ''
+        // console.log(distanceHtml)
         return `
         <li class="loc ${className}" data-id="${loc.id}">
             <h4>  
                 <span>${loc.name}</span>
+                <span title="${loc.name}">${locDistance}</span>
                 <span title="${loc.rate} stars">${'★'.repeat(loc.rate)}</span>
             </h4>
             <p class="muted">
@@ -127,6 +136,7 @@ function loadAndRenderLocs() {
 function onPanToUserPos() {
     mapService.getUserPosition()
         .then(latLng => {
+            gUserPos = latLng
             mapService.panTo({ ...latLng, zoom: 15 })
             unDisplayLoc()
             loadAndRenderLocs()
@@ -168,17 +178,23 @@ function onSelectLoc(locId) {
 }
 
 function displayLoc(loc) {
+
     document.querySelector('.loc.active')?.classList?.remove('active')
     document.querySelector(`.loc[data-id="${loc.id}"]`).classList.add('active')
 
     mapService.panTo(loc.geo)
     mapService.setMarker(loc)
-
+    let locDistance
     const el = document.querySelector('.selected-loc')
     el.querySelector('.loc-name').innerText = loc.name
     el.querySelector('.loc-address').innerText = loc.geo.address
     el.querySelector('.loc-rate').innerHTML = '★'.repeat(loc.rate)
     el.querySelector('[name=loc-copier]').value = window.location
+    if (gUserPos) {
+        const locLatLan = {lat:loc.geo.lat,lng :loc.geo.lng}
+        locDistance = `Distance: ${utilService.getDistance(locLatLan,gUserPos)} KLM`
+        el.querySelector('.loc-distance').innerText = locDistance
+    }
     el.classList.add('show')
 
     utilService.updateQueryParams({ locId: loc.id })
