@@ -17,8 +17,7 @@ window.app = {
     onSetSortBy,
     onSetFilterBy,
 }
-export let gUserPos
-
+let gUserPos
 function onInit() {
     loadAndRenderLocs()
 
