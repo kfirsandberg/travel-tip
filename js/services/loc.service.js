@@ -61,7 +61,6 @@ function query() {
                     return date1.localeCompare(date2) * gSortBy.creationTime
                 })
             }
-
             return locs
         })
 }

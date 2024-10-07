@@ -67,10 +67,23 @@
                 </section>
             </section>
         </div>
+    
     </main>
     <pre class="debug" hidden></pre>
     <div class="user-msg"></div>
     <script type="module" src="js/app.controller.js"></script>
+    <dialog id="update-modal">
+        <form method="dialog">
+          <label for="Loc-name">Loc name:</label>
+          <input type="text" id="Loc-name" name="Loc-name" value="" required>
+          <label for="Loc-rating">Rate (1-5):</label>
+          <input type="text" id="Loc-rating" name="Loc-rating" value="" required>
+          <menu>
+            <button value="cancel" id="cancelDialogBtn">Cancel</button>
+            <button onclick="app.onSubmitModal()" type="submit" id="submitDialogBtn">Submit</button>
+          </menu>
+        </form>
+      </dialog>
 </body>
 
 </html>

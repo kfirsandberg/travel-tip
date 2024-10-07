@@ -16,11 +16,12 @@ window.app = {
     onShareLoc,
     onSetSortBy,
     onSetFilterBy,
+    onSubmitModal
 }
 let gUserPos
+let gCrnLoc = {}
 function onInit() {
     loadAndRenderLocs()
-
     mapService.initMap()
         .then(() => {
             // onPanToTokyo()
@@ -33,14 +34,12 @@ function onInit() {
 }
 
 function renderLocs(locs) {
-    let distanceHtml
- 
     const selectedLocId = getLocIdFromQueryParams()
     var strHTML = locs.map(loc => {
-        let locDistance =''
+        let locDistance = ''
         if (gUserPos) {
-            const locLatLan = {lat:loc.geo.lat,lng :loc.geo.lng}
-            locDistance = (`Distance: ${utilService.getDistance(locLatLan,gUserPos)} KLM`)
+            const locLatLan = { lat: loc.geo.lat, lng: loc.geo.lng }
+            locDistance = (`Distance: ${utilService.getDistance(locLatLan, gUserPos)} KLM`)
         }
         const className = (loc.id === selectedLocId) ? 'active' : ''
         // console.log(distanceHtml)
@@ -103,24 +102,13 @@ function onSearchAddress(ev) {
 }
 
 function onAddLoc(geo) {
-    const locName = prompt('Loc name', geo.address || 'Just a place')
-    if (!locName) return
-
-    const loc = {
-        name: locName,
-        rate: +prompt(`Rate (1-5)`, '3'),
-        geo
-    }
-    locService.save(loc)
-        .then((savedLoc) => {
-            flashMsg(`Added Location (id: ${savedLoc.id})`)
-            utilService.updateQueryParams({ locId: savedLoc.id })
-            loadAndRenderLocs()
-        })
-        .catch(err => {
-            console.error('OOPs:', err)
-            flashMsg('Cannot add location')
-        })
+    gCrnLoc.geo = geo
+    const elModal = document.getElementById('update-modal')
+    elModal.showModal()
+    const elLocName = document.getElementById('Loc-name')
+    const elLocRating = document.getElementById('Loc-rating')
+    elLocName.value = (geo.address || 'Just a place')
+    elLocRating.value = 3
 }
 
 function loadAndRenderLocs() {
@@ -150,20 +138,22 @@ function onPanToUserPos() {
 function onUpdateLoc(locId) {
     locService.getById(locId)
         .then(loc => {
-            const rate = prompt('New rate?', loc.rate)
-            if (rate !== loc.rate) {
-                loc.rate = rate
-                locService.save(loc)
-                    .then(savedLoc => {
-                        flashMsg(`Rate was set to: ${savedLoc.rate}`)
-                        loadAndRenderLocs()
-                    })
-                    .catch(err => {
-                        console.error('OOPs:', err)
-                        flashMsg('Cannot update location')
-                    })
+            const elModal = document.getElementById('update-modal')
+            elModal.showModal()
+            const elLocName = document.getElementById('Loc-name')
+            const elLocRating = document.getElementById('Loc-rating')
+            elLocName.value = loc.name
+            elLocRating.value = loc.rate
+            gCrnLoc.name = loc.name
+            gCrnLoc.rate = loc.rate
+            gCrnLoc.updatedAt = loc.updatedAt
+            gCrnLoc.createdAt = loc.createdAt
+            gCrnLoc.id = loc.id
+            gCrnLoc.geo = loc.geo
 
-            }
+            console.log(loc)
+            console.log(gCrnLoc)
+
         })
 }
 
@@ -190,8 +180,8 @@ function displayLoc(loc) {
     el.querySelector('.loc-rate').innerHTML = '★'.repeat(loc.rate)
     el.querySelector('[name=loc-copier]').value = window.location
     if (gUserPos) {
-        const locLatLan = {lat:loc.geo.lat,lng :loc.geo.lng}
-        locDistance = `Distance: ${utilService.getDistance(locLatLan,gUserPos)} KLM`
+        const locLatLan = { lat: loc.geo.lat, lng: loc.geo.lng }
+        locDistance = `Distance: ${utilService.getDistance(locLatLan, gUserPos)} KLM`
         el.querySelector('.loc-distance').innerText = locDistance
     }
     el.classList.add('show')
@@ -316,4 +306,25 @@ function cleanStats(stats) {
         return acc
     }, [])
     return cleanedStats
+}
+
+function onSubmitModal() {
+    const elModal = document.getElementById('update-modal')
+    const elLocName = document.getElementById('Loc-name')
+    const elLocRating = document.getElementById('Loc-rating')
+    gCrnLoc.name = elLocName.value
+    gCrnLoc.rate = elLocRating.value
+    elModal.close()
+    if (!gCrnLoc.name) return
+    console.log(gCrnLoc)
+    locService.save(gCrnLoc)
+        .then((savedLoc) => {
+            utilService.updateQueryParams({ locId: savedLoc.id })
+            loadAndRenderLocs()
+        })
+        .catch(err => {
+            console.error('OOPs:', err)
+            flashMsg('Cannot add location')
+        })
+
 }
