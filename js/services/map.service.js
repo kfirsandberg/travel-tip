@@ -9,7 +9,7 @@ export const mapService = {
 }
 
 // TODO: Enter your API Key
-const API_KEY = 'AIzaSyCz-d1wwEma1AH7PKrIGhwqNJFtO2coVrc'
+const API_KEY = 'AIzaSyBaTX5enRHt3iEq4t_cbi_QBpxyHKoHNEQ'
 var gMap
 var gMarker
 
